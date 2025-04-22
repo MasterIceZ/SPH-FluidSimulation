@@ -1,5 +1,9 @@
 build/
 .vscode/
 
+src/glad/glad.c
+include/glad/*
+include/KHR/khrplatform.h
+
 *.o
 *.out

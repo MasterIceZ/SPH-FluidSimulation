@@ -8,8 +8,9 @@ PROJ_DIR=$(CURDIR)
 TARGET=build/main
 
 MAIN_FILE ?= src/main.cpp
+ADDITIONAL_FILES=src/glad/glad.c
 
-INCLUDES=-I$(PROJ_DIR)/include -I$(BREW_PREFIX)/include
+INCLUDES=-I$(BREW_PREFIX)/include -I$(PROJ_DIR)/include
 
 all: build run
 
@@ -17,7 +18,7 @@ build: $(TARGET)
 
 $(TARGET): $(MAIN_FILE)
 	@mkdir -p build
-	$(CXX) -o $(TARGET) $(MAIN_FILE) $(INCLUDES) $(LDFLAGS) $(CFXXLAGS)
+	$(CXX) -o $(TARGET) $(MAIN_FILE) $(ADDITIONAL_FILES) $(INCLUDES) $(LDFLAGS) $(CFXXLAGS)
 
 run:
 	@./$(TARGET) $(INPUT) $(OUTPUT)

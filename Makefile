@@ -1,16 +1,23 @@
+UNAMES := $(shell uname)
+
 CXX=clang++
 CFXXLAGS=-std=gnu++2a -Wno-macro-redefined -Wall -g
-LDFLAGS=-L$(BREW_PREFIX)/lib -lglfw -framework OpenGL -DGL_SILENCE_DEPRECATION
+CFXXLAGS += -Wno-deprecated-declarations
 
-BREW_PREFIX=$(shell brew --prefix)
+ifeq ($(UNAMES), Darwin)
+	LDFLAGS=-L$(BREW_PREFIX)/lib -lglfw -framework OpenGL -DGL_SILENCE_DEPRECATION
+	BREW_PREFIX=$(shell brew --prefix)
+	INCLUDES=-I$(BREW_PREFIX)/include -I$(PROJ_DIR)/include
+else
+	$(error Unsupported platform: $(UNAMES))
+endif
+
 PROJ_DIR=$(CURDIR)
 
 TARGET=build/main
 
 MAIN_FILE ?= src/main.cpp
 ADDITIONAL_FILES=$(wildcard $(PROJ_DIR)/include/**/*.c $(PROJ_DIR)/include/**/*.cpp)
-
-INCLUDES=-I$(BREW_PREFIX)/include -I$(PROJ_DIR)/include
 
 all: build run
 

@@ -1,9 +1,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
@@ -39,6 +39,14 @@ signed main(int argc, char *argv[]) {
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
 
+    float time = glfwGetTime();
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, time, glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    GLuint model_location = glGetUniformLocation(shader_program, "model");
+    glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
+
     render_imgui();
 
     GLint colorLocation = glGetUniformLocation(shader_program, "inputColor");
@@ -48,7 +56,10 @@ signed main(int argc, char *argv[]) {
 
     glUseProgram(shader_program);
     glBindVertexArray(VAO);
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    
 
     glfwSwapBuffers(window);
     glfwPollEvents();

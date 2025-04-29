@@ -8,7 +8,7 @@ PROJ_DIR=$(CURDIR)
 TARGET=build/main
 
 MAIN_FILE ?= src/main.cpp
-ADDITIONAL_FILES=src/glad/glad.c
+ADDITIONAL_FILES=$(wildcard $(PROJ_DIR)/include/**/*.c $(PROJ_DIR)/include/**/*.cpp)
 
 INCLUDES=-I$(BREW_PREFIX)/include -I$(PROJ_DIR)/include
 

@@ -25,5 +25,6 @@ run:
 
 clean:
 	$(RM) -rf build/
+	$(RM) imgui.ini
 
 rebuild: clean all

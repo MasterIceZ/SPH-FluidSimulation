@@ -16,7 +16,7 @@ By implementing the SPH method, we can simulate fluid dynamics in a more realist
 
 We are using GLAD to load OpenGL functions. You can install it by using generator here: [GLAD](https://glad.dav1d.de/#profile=compatibility&language=c&specification=gl&loader=on&api=gl%3D4.6)
 
-Then, copy the generated files to `include/glad/glad.h`, `src/glad.c` and `include/KHR/khrplatform.h`.
+Then, copy the generated files to `include/glad/` and `include/KHR/`.
 
 Installing ImGui
 
@@ -42,5 +42,5 @@ make MAIN_FILE=src/main.cpp
 
 ## Contributors
 
-- [Dej Wongwirathorn](https://github.com/kyrov)
 - [Borworntat Dendumrongkul](https://github.com/mastericez)
+- [Dej Wongwirathorn](https://github.com/kyrov)

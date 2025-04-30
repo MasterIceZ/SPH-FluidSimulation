@@ -1,5 +1,5 @@
-#ifndef __SHADER_HPP_INCLUDED__
-#define __SHADER_HPP_INCLUDED__
+#ifndef __SHADER_HANDLER_HPP_INCLUDED__
+#define __SHADER_HANDLER_HPP_INCLUDED__
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>

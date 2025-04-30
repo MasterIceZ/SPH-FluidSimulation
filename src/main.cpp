@@ -4,13 +4,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include <iostream>
 
 #include "handler/glfw_window_handler.hpp"
 #include "handler/imgui_handler.hpp"
-
-#include "shader/shader.hpp"
+#include "handler/shader_handler.hpp"
 
 #include "sample.hpp"
 
@@ -38,6 +36,9 @@ signed main(int argc, char *argv[]) {
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
+
+    GLuint resolution_location = glGetUniformLocation(shader_program, "resolution");
+    glUniform2f(resolution_location, (float) display_w, (float) display_h);
 
     float time = glfwGetTime();
     glm::mat4 model = glm::mat4(1.0f);

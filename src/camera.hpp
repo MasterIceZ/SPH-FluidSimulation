@@ -12,9 +12,11 @@
 extern float sensitivity;
 
 struct camera_t {
+private:
   glm::vec3 position, target, up;
   float yaw, pitch, radius;
 
+public:
   camera_t(glm::vec3 target, float radius, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f)):
     target(target), radius(radius), up(up), yaw(-90.0f), pitch(0.0f) {
     update_position();

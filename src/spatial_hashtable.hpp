@@ -4,7 +4,9 @@
 #include <glm/glm.hpp>
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
+#include <algorithm>
 
 class spatial_hash_table_t {
 private:
@@ -43,18 +45,23 @@ private:
     glm::ivec3 cell = get_coordinates(p);
     std::vector<int> neighbors;
 
+    std::unordered_set<size_t> seen;
+
     for(int dz=-1; dz<=1; ++dz) {
       for(int dy=-1; dy<=1; ++dy) {
         for(int dx=-1; dx<=1; ++dx) {
+          if(dx == 0 && dy == 0 && dz == 0) {
+            continue;
+          }
           glm::ivec3 neighbor_cell = cell + glm::ivec3(dx, dy, dz);
           size_t neightbor_key = hasher(neighbor_cell);
           auto it = grid.find(neightbor_key);
           if(it != grid.end()) {
-            neighbors.insert(
-              neighbors.end(), 
-              it->second.begin(),        
-              it->second.end()
-            );
+            for(int id : it->second) {
+              if(seen.insert(id).second) {
+                neighbors.push_back(id);
+              }
+            }
           }
         }
       }

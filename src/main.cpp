@@ -4,19 +4,30 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include <iostream>
+#include <cstdbool>
 
 #include "handler/glfw_window_handler.hpp"
 #include "handler/imgui_handler.hpp"
 #include "handler/shader_handler.hpp"
 
 #include "sample.hpp"
+#include "camera.hpp"
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 800;
 
 // static variables
 float r_value = 0.0f, g_value = 0.0f, b_value = 0.0f;
+float sensitivity = 0.1f;
+bool edit_mode = true;
+camera_t camera(
+  glm::vec3(0.0f, 0.0f, 0.0f),
+  3.0f
+);
+float lastX, lastY;
+bool firstMouse;
 
 signed main(int argc, char *argv[]) {
   GLFWwindow *window = initialize_window();
@@ -40,13 +51,19 @@ signed main(int argc, char *argv[]) {
     GLuint resolution_location = glGetUniformLocation(shader_program, "resolution");
     glUniform2f(resolution_location, (float) display_w, (float) display_h);
 
-    float time = glfwGetTime();
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, time, glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 projection = glm::perspective(
+      glm::radians(45.0f), 
+      (float)display_w / (float)display_h, 
+      0.1f, 
+      100.0f
+    );
+    glm::mat4 view = camera.get_view_matrix();
 
-    GLuint model_location = glGetUniformLocation(shader_program, "model");
-    glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
+    GLuint view_location = glGetUniformLocation(shader_program, "view");
+    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
+
+    GLuint proj_location = glGetUniformLocation(shader_program, "projection");
+    glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(projection));
 
     render_imgui();
 

@@ -82,15 +82,15 @@ signed main(int argc, char *argv[]) {
     // Update particles
     particles_buckets[!bucket] = sph_solver(particles_buckets[bucket]);
 
-    // std::cerr << "BEFORE: " << particles_buckets[!bucket].size() << "\n";
-    // for(auto particle: particles_buckets[bucket]) {
-    //   std::cerr << "Particle: " << particle.position.x << ", " << particle.position.y << ", " << particle.position.z << "\n";
-    // }
-    // std::cerr << "AFTER: " << particles_buckets[!bucket].size() << "\n";
-    // for(auto particle: particles_buckets[!bucket]) {
-    //   std::cerr << "Particle: " << particle.position.x << ", " << particle.position.y << ", " << particle.position.z << "\n";
-    // }
-    // std::cerr << "=============\n" << "\n";
+    std::cerr << "BEFORE: " << particles_buckets[!bucket].size() << "\n";
+    for(auto particle: particles_buckets[bucket]) {
+      std::cerr << "Particle: " << particle.position.x << ", " << particle.position.y << ", " << particle.position.z << "\n";
+    }
+    std::cerr << "AFTER: " << particles_buckets[!bucket].size() << "\n";
+    for(auto particle: particles_buckets[!bucket]) {
+      std::cerr << "Particle: " << particle.position.x << ", " << particle.position.y << ", " << particle.position.z << "\n";
+    }
+    std::cerr << "=============\n" << "\n";
 
     GLint colorLocation = glGetUniformLocation(shader_program, "inputColor");
     glUniform3f(colorLocation, r_value, g_value, b_value);

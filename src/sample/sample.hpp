@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <cmath>
+
 GLuint sample_triangle_array() {
   const float k = 1.0f / (2.0f * sqrtf(2.0f));
 

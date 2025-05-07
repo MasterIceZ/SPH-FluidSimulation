@@ -11,8 +11,8 @@
 #include <cstdbool>
 
 extern float r_value, g_value, b_value;
-extern float sensitivity;
-extern bool edit_mode;
+// extern float sensitivity;
+// extern bool edit_mode;
 
 void initialize_imgui(GLFWwindow *window) {
   IMGUI_CHECKVERSION();
@@ -27,9 +27,9 @@ void initialize_imgui(GLFWwindow *window) {
 }
 
 void render_imgui() {
-  if(!edit_mode) {
-    return ;
-  }
+  // if(!edit_mode) {
+  //   return ;
+  // }
 
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -37,7 +37,7 @@ void render_imgui() {
   
   ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
   ImGui::Begin("Parameters Controller");
-  ImGui::SliderFloat("Sensitivity", &sensitivity, 0.0f, 1.0f);
+  // ImGui::SliderFloat("Sensitivity", &sensitivity, 0.0f, 1.0f);
   ImGui::SliderFloat("R", &r_value, 0.0f, 1.0f);
   ImGui::SliderFloat("G", &g_value, 0.0f, 1.0f);
   ImGui::SliderFloat("B", &b_value, 0.0f, 1.0f);
@@ -45,9 +45,9 @@ void render_imgui() {
 }
 
 void render_imgui_draw_data() {
-  if(!edit_mode) {
-    return ;
-  }
+  // if(!edit_mode) {
+  //   return ;
+  // }
 
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

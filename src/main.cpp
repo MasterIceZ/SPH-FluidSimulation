@@ -5,40 +5,66 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <vector>
+#include <array>
 #include <iostream>
 #include <cstdbool>
+
+#include "particle.hpp"
 
 #include "handler/glfw_window_handler.hpp"
 #include "handler/imgui_handler.hpp"
 #include "handler/shader_handler.hpp"
+#include "handler/renderer.hpp"
 
-#include "sample.hpp"
-#include "camera.hpp"
+#include "solver/solver.hpp"
+
+#include "sample/sample_shader.hpp"
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 800;
 
 // static variables
 float r_value = 0.0f, g_value = 0.0f, b_value = 0.0f;
-float sensitivity = 0.1f;
-bool edit_mode = true;
-camera_t camera(
-  glm::vec3(0.0f, 0.0f, 0.0f),
-  3.0f
-);
-float lastX, lastY;
-bool firstMouse;
+const glm::vec3 border_max = glm::vec3(10.0f, 10.0f, 10.0f);
+const glm::vec3 border_min = glm::vec3(0.0f, 0.0f, 0.0f);
+
+// general settings
+float smooth_length = 1.0f;
+float time_step = 0.01f;
+float gravity = 0.1f;
+const float damp = 1.0f;
+
+// particle properties
+float mass = 1.0f;
+float rest_density = 1000.0f;
+float sound_speed = 1500.0f;
+float particle_gamma = 7.0f;
 
 signed main(int argc, char *argv[]) {
   GLFWwindow *window = initialize_window();
   initialize_imgui(window);
 
+  std::vector<particle_t> particles;
+  for (float x = 1.0f; x <= 3.0f; x += 0.5f) {
+    for (float y = 1.0f; y <= 3.0f; y += 0.5f) {
+      particles.push_back(
+          {glm::vec3(x, y, 5), glm::vec3(0), glm::vec3(0), 0.0f, 0.0f});
+    }
+  }
+
   GLuint shader_program = create_shader_program(
-    "shader/vertex_shader.glsl", 
-    "shader/fragment_shader.glsl"
+    "shader/particle/vertex_shader.glsl", 
+    "shader/particle/fragment_shader.glsl"
   );
-  
-  GLuint VAO = sample_triangle_array();
+
+  int bucket = 0;
+  std::array<std::vector<particle_t>, 2> particles_buckets;
+
+  particles_buckets[bucket] = particles;
+
+  GLuint VAO, VBO;
+  create_particle_buffers(VAO, VBO, 10000);
 
   while(!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -51,35 +77,33 @@ signed main(int argc, char *argv[]) {
     GLuint resolution_location = glGetUniformLocation(shader_program, "resolution");
     glUniform2f(resolution_location, (float) display_w, (float) display_h);
 
-    glm::mat4 projection = glm::perspective(
-      glm::radians(45.0f), 
-      (float)display_w / (float)display_h, 
-      0.1f, 
-      100.0f
-    );
-    glm::mat4 view = camera.get_view_matrix();
-
-    GLuint view_location = glGetUniformLocation(shader_program, "view");
-    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
-
-    GLuint proj_location = glGetUniformLocation(shader_program, "projection");
-    glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(projection));
-
     render_imgui();
+
+    // Update particles
+    particles_buckets[!bucket] = sph_solver(particles_buckets[bucket]);
+
+    // std::cerr << "BEFORE: " << particles_buckets[!bucket].size() << "\n";
+    // for(auto particle: particles_buckets[bucket]) {
+    //   std::cerr << "Particle: " << particle.position.x << ", " << particle.position.y << ", " << particle.position.z << "\n";
+    // }
+    // std::cerr << "AFTER: " << particles_buckets[!bucket].size() << "\n";
+    // for(auto particle: particles_buckets[!bucket]) {
+    //   std::cerr << "Particle: " << particle.position.x << ", " << particle.position.y << ", " << particle.position.z << "\n";
+    // }
+    // std::cerr << "=============\n" << "\n";
 
     GLint colorLocation = glGetUniformLocation(shader_program, "inputColor");
     glUniform3f(colorLocation, r_value, g_value, b_value);
 
     render_imgui_draw_data();
 
-    glUseProgram(shader_program);
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    
+    // std::cerr << "Particles size: " << particles_buckets[!bucket].size() << std::endl;
+    render_particles(particles_buckets[!bucket], VAO, VBO, shader_program);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
+
+    bucket = !bucket;
   }
 
   cleanup_imgui();

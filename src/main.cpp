@@ -74,7 +74,6 @@ signed main(int argc, char *argv[]) {
 
     glUseProgram(shader_program);
     glBindVertexArray(VAO);
-    glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     

@@ -1,18 +1,24 @@
 UNAMES := $(shell uname)
 
-CXX=clang++
+
 CFXXLAGS=-std=gnu++2a -Wno-macro-redefined -Wall -g
 CFXXLAGS += -Wno-deprecated-declarations
 
+PROJ_DIR=$(CURDIR)/..
+
 ifeq ($(UNAMES), Darwin)
+	CXX=clang++
 	LDFLAGS=-L$(BREW_PREFIX)/lib -lglfw -framework OpenGL -DGL_SILENCE_DEPRECATION
 	BREW_PREFIX=$(shell brew --prefix)
 	INCLUDES=-I$(BREW_PREFIX)/include -I$(PROJ_DIR)/include
+else ifeq ($(UNAMES), Linux)
+	CXX=g++
+	LDFLAGS := -lglfw -DGL_SILENCE_DEPRECATION
+	INCLUDES := -I/usr/include -I$(PROJ_DIR)/include
 else
 	$(error Unsupported platform: $(UNAMES))
 endif
 
-PROJ_DIR=$(CURDIR)
 
 TARGET=build/test
 

@@ -31,9 +31,9 @@ const glm::vec3 border_min = glm::vec3(-0.5, -0.5, -0.5);
 
 // general settings
 float smooth_length = 0.045f;
-float time_step = 0.01f;
+float time_step = 0.05f;
 float gravity = 9.8f;
-const float damp = 0.3f;
+const float damp = 0.1f;
 
 // particle properties
 float mass = 0.02f;
@@ -48,6 +48,7 @@ camera_t cam(
   -60.0f,
   30.0f
 );
+
 glm::mat4 view = cam.get_view_matrix();
 
 void show_particles(const std::vector<particle_t> &particles) {

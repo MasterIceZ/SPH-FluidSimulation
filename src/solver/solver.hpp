@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "../particle.hpp"
+#include "../types/particle.hpp"
 
 #include "smooth_kernel.hpp"
 
@@ -65,7 +65,7 @@ std::vector<particle_t> calculate_forces(const std::vector<particle_t> &particle
       if(glm::length(r) <= EPS || glm::length(r) > smooth_length) {
         continue;
       }
-      std::cerr << "COLLIDE" << std::endl;
+      // std::cerr << "COLLIDE" << std::endl;
       glm::vec3 v = other.velocity - particle.velocity;
       viscosity_force += viscosity * mass * (v / other.density) * w_viscosity(r);
       float p = particle.pressure + other.pressure;

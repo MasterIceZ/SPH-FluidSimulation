@@ -14,10 +14,11 @@
 #include "handler/imgui_handler.hpp"
 #include "handler/renderer.hpp"
 #include "handler/shader_handler.hpp"
-#include "particle.hpp"
-#include "solver/solver.hpp"
 
-// #include "sample/sample_shader.hpp"
+#include "types/particle.hpp"
+#include "types/camera.hpp"
+
+#include "solver/solver.hpp"
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 800;
@@ -39,6 +40,16 @@ float mass = 0.02f;
 float rest_density = 1.0f;
 float gas_constant = 1.0f;
 float viscosity = 1.04f;
+
+glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) WINDOW_WIDTH/ (float) WINDOW_HEIGHT, 0.1f, 100.0f);
+
+camera_t cam(
+  glm::vec3(0.0f),  
+  3.5f,
+  -60.0f,
+  30.0f
+);
+glm::mat4 view = cam.get_view_matrix();
 
 void show_particles(const std::vector<particle_t> &particles) {
   for (const auto &particle : particles) {
@@ -74,17 +85,6 @@ std::vector<particle_t> normalize_particle(
   return normalized_particles;
 }
 
-void clamp_particle_positions(std::vector<particle_t> &particles) {
-  for (auto &particle : particles) {
-    particle.position.x =
-        glm::clamp(particle.position.x, border_min.x, border_max.x);
-    particle.position.y =
-        glm::clamp(particle.position.y, border_min.y, border_max.y);
-    particle.position.z =
-        glm::clamp(particle.position.z, border_min.z, border_max.z);
-  }
-}
-
 std::vector<glm::vec3> generate_particle_positions(const std::vector<particle_t> &particles) {
   std::vector<glm::vec3> positions;
   for (const auto &particle : particles) {
@@ -95,39 +95,35 @@ std::vector<glm::vec3> generate_particle_positions(const std::vector<particle_t>
 
 signed main(int argc, char *argv[]) {
   GLFWwindow *window = initialize_window();
-  initialize_imgui(window);
+  // initialize_imgui(window);
 
-  // Generate particles
   std::vector<particle_t> particles;
   std::mt19937 rng(std::random_device{}());
   std::uniform_real_distribution<float> dist(-0.4f, 0.4f);
 
-  // Generate 100 random points
-  std::vector<glm::vec2> points;
-  for (int i = 0; i < 500; ++i) {
+  std::vector<glm::vec3> points;
+  for (int i = 0; i < 3000; ++i) {
     float x = dist(rng);
     float y = dist(rng);
-    points.emplace_back(x, y);
+    float z = dist(rng);
+    points.emplace_back(x, y, z);
   }
   for(int i = 0; i < points.size(); ++i) {
-    particles.push_back({glm::vec3(points[i].x, points[i].y, 0), glm::vec3(0), glm::vec3(-1), 0.0f, 0.0f});
-  }
-  for (const auto &particle : particles) {
-    std::cout << "Before Normalization: (" << particle.position.x << ", "
-              << particle.position.y << ", " << particle.position.z << ")\n";
-  }
-
-  // particles = normalize_particle(particles, 15.0f);
-
-  for (const auto &particle : particles) {
-    std::cout << "After Normalization: (" << particle.position.x << ", "
-              << particle.position.y << ", " << particle.position.z << ")\n";
+    particles.push_back({
+      glm::vec3(points[i].x, points[i].y, points[i].z), 
+      glm::vec3(0), 
+      glm::vec3(-1), 
+      0.0f, 
+      0.0f
+    });
   }
 
-  GLuint shader_program = create_shader_program(
+  GLuint particle_shader = create_shader_program(
     "shader/particle/vertex_shader.glsl",
     "shader/particle/fragment_shader.glsl"
   );
+  GLint loc_proj_particle = glGetUniformLocation(particle_shader, "projection");
+  GLint loc_view_particle = glGetUniformLocation(particle_shader, "view");
 
   int bucket = 0;
   std::array<std::vector<particle_t>, 2> particles_buckets;
@@ -144,10 +140,21 @@ signed main(int argc, char *argv[]) {
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, particles_positions.size() * sizeof(glm::vec3),
-               particles_positions.data(), GL_DYNAMIC_DRAW);
+  glBufferData(
+    GL_ARRAY_BUFFER, 
+    particles_positions.size() * sizeof(glm::vec3),
+    particles_positions.data(), 
+    GL_DYNAMIC_DRAW
+  );
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *) 0);
+  glVertexAttribPointer(
+    0, 
+    3, 
+    GL_FLOAT, 
+    GL_FALSE, 
+    sizeof(glm::vec3), 
+    (void *) 0
+  );
   glEnableVertexAttribArray(0);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -158,18 +165,18 @@ signed main(int argc, char *argv[]) {
   glPointSize(10.0f);
 
   GLuint border_shader = create_shader_program(
-    "shader/vertex_shader.glsl",
-    "shader/fragment_shader.glsl"
+    "shader/border/vertex_shader.glsl",
+    "shader/border/fragment_shader.glsl"
   );
+  GLint loc_proj_border = glGetUniformLocation(border_shader, "projection");
+  GLint loc_view_border = glGetUniformLocation(border_shader, "view");
 
   std::vector<glm::vec3> border_vertices = {
-    // Bottom face
     border_min,
     glm::vec3(border_max.x, border_min.y, border_min.z),
     glm::vec3(border_max.x, border_min.y, border_max.z),
     glm::vec3(border_min.x, border_min.y, border_max.z),
 
-    // Top face
     glm::vec3(border_min.x, border_max.y, border_min.z),
     glm::vec3(border_max.x, border_max.y, border_min.z),
     border_max,
@@ -177,13 +184,8 @@ signed main(int argc, char *argv[]) {
 };
 
   std::vector<unsigned int> border_indices = {
-    // Bottom face
     0, 1, 1, 2, 2, 3, 3, 0,
-
-    // Top face
     4, 5, 5, 6, 6, 7, 7, 4,
-
-    // Vertical edges
     0, 4, 1, 5, 2, 6, 3, 7
   };
 
@@ -196,15 +198,29 @@ signed main(int argc, char *argv[]) {
   glBindVertexArray(border_VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, border_VBO);
-  glBufferData(GL_ARRAY_BUFFER, border_vertices.size() * sizeof(glm::vec3),
-              border_vertices.data(), GL_STATIC_DRAW);
+  glBufferData(
+    GL_ARRAY_BUFFER, 
+    border_vertices.size() * sizeof(glm::vec3),
+    border_vertices.data(),
+    GL_STATIC_DRAW
+  );
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, border_EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-              border_indices.size() * sizeof(unsigned int),
-              border_indices.data(), GL_STATIC_DRAW);
+  glBufferData(
+    GL_ELEMENT_ARRAY_BUFFER,
+    border_indices.size() * sizeof(unsigned int),
+    border_indices.data(), 
+    GL_STATIC_DRAW
+  );
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
+  glVertexAttribPointer(
+    0, 
+    3, 
+    GL_FLOAT, 
+    GL_FALSE, 
+    sizeof(glm::vec3), 
+    (void *) 0
+  );
   glEnableVertexAttribArray(0);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -220,11 +236,10 @@ signed main(int argc, char *argv[]) {
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
-    render_imgui();
+
+    // render_imgui();
 
     particles_buckets[!bucket] = sph_solver(particles_buckets[bucket]);
-    // show_particles(particles_buckets[!bucket]);
-
     particles_positions = generate_particle_positions(particles_buckets[!bucket]);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -236,17 +251,29 @@ signed main(int argc, char *argv[]) {
     );
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    render_imgui_draw_data();
+    // render_imgui_draw_data();
 
-
-    glUseProgram(shader_program);
+    glUseProgram(particle_shader);
+    glUniformMatrix4fv(loc_proj_particle, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(loc_view_particle, 1, GL_FALSE, glm::value_ptr(view));
     glBindVertexArray(VAO);
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(particles_positions.size()));
+    glDrawArrays(
+      GL_POINTS, 
+      0, 
+      static_cast<GLsizei> (particles_positions.size())
+    );
 
     glUseProgram(border_shader);
+    glUniformMatrix4fv(loc_proj_border, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(loc_view_border, 1, GL_FALSE, glm::value_ptr(view));
     glBindVertexArray(border_VAO);
 
-    glDrawElements(GL_LINES, static_cast<GLsizei>(border_indices.size()), GL_UNSIGNED_INT, 0);
+    glDrawElements(
+      GL_LINES, 
+      static_cast<GLsizei>(border_indices.size()), 
+      GL_UNSIGNED_INT, 
+      0
+    );
 
     glBindVertexArray(0);
     glUseProgram(border_shader);
@@ -257,7 +284,7 @@ signed main(int argc, char *argv[]) {
     bucket = !bucket;
   }
 
-  cleanup_imgui();
+  // cleanup_imgui();
   cleanup_window(window);
 
   return 0;

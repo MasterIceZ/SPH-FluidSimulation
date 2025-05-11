@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "../particle.hpp"
+#include "../types/particle.hpp"
 
 extern const glm::vec3 border_max;
 extern const glm::vec3 border_min;

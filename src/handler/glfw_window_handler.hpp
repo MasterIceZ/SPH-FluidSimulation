@@ -8,7 +8,7 @@
 #include <cstdbool>
 #include <iostream>
 
-#include "../camera.hpp"
+#include "../types/camera.hpp"
 
 #define FORWARD 0
 #define BACKWARD 1

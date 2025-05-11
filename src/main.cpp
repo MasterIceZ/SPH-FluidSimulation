@@ -42,7 +42,6 @@ float gas_constant = 1.0f;
 float viscosity = 1.04f;
 
 glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) WINDOW_WIDTH/ (float) WINDOW_HEIGHT, 0.1f, 100.0f);
-
 camera_t cam(
   glm::vec3(0.0f),  
   3.5f,

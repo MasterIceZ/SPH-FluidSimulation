@@ -16,7 +16,7 @@ float my_pow(float x, int n){
 }
 
 float w_poly6(glm::vec3 r){
-    return (315.0f / (64.0f * M_PI * my_pow(smooth_length, 9))) * my_pow(my_pow(smooth_length, 2) - glm::length(r), 3);
+    return (315.0f / (64.0f * M_PI * my_pow(smooth_length, 9))) * my_pow(my_pow(smooth_length, 2) - (glm::length(r) * glm::length(r)), 3);
 }
 
 float w_spiky(glm::vec3 r){

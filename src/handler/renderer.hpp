@@ -14,6 +14,15 @@
 extern const glm::vec3 border_max;
 extern const glm::vec3 border_min;
 
+void update_particle_buffers(GLuint VBO, const std::vector<particle_t>& particles) {
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferSubData(GL_ARRAY_BUFFER,    // target
+                  0,                  // offset in bytes
+                  sizeof(glm::vec3),  // just one point
+                  particles.data());  // pointer to new data
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void render_particles(const std::vector<particle_t>& particles, GLuint VAO, GLuint VBO, GLuint shader_program) {
   std::vector<glm::vec3> positions;
   positions.reserve(particles.size());
@@ -22,13 +31,13 @@ void render_particles(const std::vector<particle_t>& particles, GLuint VAO, GLui
     positions.push_back(normalized_position);
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * positions.size(), positions.data());
-
   glUseProgram(shader_program);
   glBindVertexArray(VAO);
-  glEnable(GL_PROGRAM_POINT_SIZE);
-  glDrawArrays(GL_POINTS, 0, positions.size());
+
+  glDrawArrays(GL_POINTS, 0, particles.size());
+
+  glBindVertexArray(0);
+  glUseProgram(0);
 }
 
 #endif

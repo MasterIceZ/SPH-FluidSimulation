@@ -15,6 +15,7 @@ extern float gravity;
 extern const glm::vec3 border_min;
 extern const glm::vec3 border_max;
 extern const float damp;
+extern const float EPS;
 
 // particle properties
 extern float mass;
@@ -61,7 +62,7 @@ std::vector<particle_t> calculate_forces(const std::vector<particle_t> &particle
       const particle_t &other = particles[j];
       glm::vec3 r = particle.position - other.position;
       // std::cerr << "D:"  << glm::length(r) << std::endl;
-      if(glm::length(r) > smooth_length) {
+      if(glm::length(r) <= EPS || glm::length(r) > smooth_length) {
         continue;
       }
       std::cerr << "COLLIDE" << std::endl;
@@ -116,6 +117,14 @@ std::vector<particle_t> sph_solver(const std::vector<particle_t> &particles) {
 
     if(glm::any(glm::isnan(particle.position))) {
       std::cerr << "Particle position is NaN!" << std::endl;
+      for(int i=0; i<(int) particle.position.length(); ++i) {
+        if(glm::isnan(particle.position[i])) {
+          std::cerr << "Force: " << particle.force[i] << std::endl;
+          std::cerr << "Velocity: " << particle.velocity[i] << std::endl;
+          std::cerr << "Density: " << particle.density << std::endl;
+          std::cerr << "Pressure: " << particle.pressure << std::endl;
+        }
+      }
       exit(1);
       particle.position = glm::vec3(0.0f);
     }

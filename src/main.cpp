@@ -21,6 +21,7 @@
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 800;
+const float EPS = 0.0001f;
 
 // static variables
 float r_value = 0.0f, g_value = 0.0f, b_value = 0.0f;
@@ -103,7 +104,7 @@ signed main(int argc, char *argv[]) {
 
   // Generate 100 random points
   std::vector<glm::vec2> points;
-  for (int i = 0; i < 200; ++i) {
+  for (int i = 0; i < 500; ++i) {
     float x = dist(rng);
     float y = dist(rng);
     points.emplace_back(x, y);

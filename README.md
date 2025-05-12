@@ -38,7 +38,6 @@ make MAIN_FILE=src/main.cpp
 - [Smoothed Particle Hydrodynamics Techniques for the Physics Based Simulation of Fluids and Solids](https://arxiv.org/abs/2009.06944)
 - [Particle-Based Fluid Simulation for Interactive Applications](https://matthias-research.github.io/pages/publications/sca03.pdf)
 - [Spatial Hashing](https://matthias-research.github.io/pages/tenMinutePhysics/11-hashing.pdf)
-- [Poisson surface reconstruction](https://hhoppe.com/poissonrecon.pdf)
 
 ## Contributors
 

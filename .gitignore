@@ -9,3 +9,11 @@ imgui.ini
 
 *.o
 *.out
+
+*-blx.bib
+*.log
+*.aux
+*.bbl
+*.bcf
+*.xml
+*.blg

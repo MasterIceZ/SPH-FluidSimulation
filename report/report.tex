@@ -1,0 +1,186 @@
+\documentclass[a4paper]{article}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{framed}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\usepackage[natbib=true,style=authoryear,backend=bibtex,useprefix=true]{biblatex}
+\addbibresource{ref.bib}
+
+\title{SPH Fluid Simulation with OpenGL in C++}
+\author{
+  Borworntat Dendumrongkul\thanks{6632109921, 6632109921@student.chula.ac.th} \and 
+  Dej Wongwirathorn\thanks{6432055421, 6432055421@student.chula.ac.th}
+}
+\date{May 2025}
+
+\begin{document}
+\maketitle
+
+\section{Smooth Particle Hydrodynamics}
+
+Smooth Particle Hydrodynamic (SPH) is a computational method for simulating fluid flows.
+This method is based on the Lagrangian approach, where the fluid is represented by a set of particles that carry properties such as mass, velocity, and density.
+The particles move with the fluid flow, and their properties are updated based on the interactions with neighboring particles.
+
+\section{Project Overview}
+
+The primary objective of this project is to implement a fluid simulation using the Largrangian method, specifically the SPH method.
+The simulation will be visualized using OpenGL, allowing for real-time rendering of the fluid dynamics.
+The project will be implemented in C++ and will utilize the OpenGL library for rendering.
+
+\section{Implementation}
+
+Our implementation of the SPH fluid simulation can be accessed at \href{https://github.com/MasterIceZ/SPH-FluidSimulation}{Github}.
+The project is structured as follows:
+\begin{itemize}
+  \item \verb|src| - Contains the source code for the simulation.
+  \item \verb|include| - Contains the library which is used in the simulation.
+  \item \verb|shaders| - Contains the shaders used for rendering the simulation.
+\end{itemize}
+
+\subsection{Fluid Simulation Solver}
+
+The fluid simulation solver is responsible for updating the density ($\rho$), pressure ($P$), velocity ($\mathbf{v}$), and position ($\mathbf{x}$) of the particles in each time step.
+The solver uses the SPH equations to compute the interactions between particles and update their properties accordingly.
+
+The main steps of the solver are as follows:
+\begin{verbatim}
+  For each particle i:
+    Compute density using the kernel function
+    Compute pressure using the equation of state
+  
+  For each particle i:
+    Compute forces from neighboring particles
+  
+  For each particle i:
+    Compute acceleration using the forces
+    Update velocity using the computed acceleration
+    Update position using the updated velocity
+\end{verbatim}
+
+\subsubsection{Smoothing Kernel}
+
+The smoothing kernel is a function that defines the influence of a particle on its neighbors.
+In SPH, the smoothing kernel is used to compute the density, pressure, and forces acting to the particles.
+
+Our Implementation uses the following kernel functions:
+\begin{itemize}
+  \item \textbf{Wpoly6 kernel}:
+    \begin{equation}
+      \nonumber
+      W_{poly6}(\mathbf{r}, h) = \frac{315}{64 \pi h^9} \begin{cases}
+        (h^2 - r^2)^3 & \text{if } r < h \\
+        0 & \text{otherwise}
+      \end{cases}
+    \end{equation}
+  \item \textbf{Spiky kernel}:
+    \begin{equation}
+    \nonumber
+      W_{spiky}(\mathbf{r}, h) = \frac{15}{\pi h^6} \begin{cases}
+        (h - r)^3 & \text{if } 0 \le r \le h \\
+        0 & \text{otherwise}
+      \end{cases}
+    \end{equation}
+  \item \textbf{Viscosity kernel}:
+    \begin{equation}
+    \nonumber
+      W_{visc}(\mathbf{r}, h) = \frac{15}{2 \pi h^3} \begin{cases}
+        -\frac{r^3}{2h^3} + \frac{r^2}{h^2} + \frac{h}{2r} - 1 & \text{if } 0 \le r \le h \\
+        0 & \text{otherwise}
+      \end{cases}
+    \end{equation}
+\end{itemize}
+
+Where $r$ is the distance between two particles, and $h$ is the smoothing length.
+
+The smoothing length $h$ determines the range of influence of a particle on its neighbors.
+
+\subsubsection{Computing Density and Pressure}
+
+The density of a particle is computed using the $W_{poly6}$ kernel. By the definition of the density, we have:
+\[
+  \rho_i = \sum_{j}m_j W_{poly6}(\mathbf{r} - \mathbf{r}_j, h)
+\]
+
+where $m_j$ is the mass of particle $j$, $\mathbf{r}$ is the position of particle $i$, and $\mathbf{r}_j$ is the position of particle $j$.
+
+In this implementation, we use the ideal gas equation of state to compute the pressure of the fluid:
+\[
+  p = k(\rho - \rho_0)
+\]
+
+where $k$ is the stiffness coefficient, $\rho$ is the density of the particle, and $\rho_0$ is the rest density of the fluid.
+
+\subsubsection{Computing Forces}
+
+The are two main forces acting on the particles in the simulation:
+\begin{itemize}
+  \item \textbf{Pressure force}:
+    The pressure force is computed using the $W_{spiky}$ kernel. The pressure force acting on particle $i$ is given by:
+    \begin{equation}
+    \nonumber
+      \mathbf{f}^{pressure}_i = -\sum_{j} m_j \cdot \frac{p_i + p_j}{2 \rho_j} \nabla W_{spiky}(\mathbf{r} - \mathbf{r}_j, h)
+    \end{equation}
+  \item \textbf{Viscosity force}:
+    The viscosity force is computed using the $W_{visc}$ kernel. The viscosity force acting on particle $i$ is given by:
+    \begin{equation}
+    \nonumber
+      \mathbf{f}^{viscosity}_i = \mu \cdot \sum_{j} m_j \cdot \frac{v_j - v_i}{\rho_j} \nabla^2 W_{visc}(\mathbf{r} - \mathbf{r}_j, h)
+    \end{equation}
+\end{itemize}
+
+Where $\mu$ is the viscosity coefficient, $v_i$ is the velocity of particle $i$, and $v_j$ is the velocity of particle $j$.
+
+Total force acting on particle $i$ is given by:
+\[
+  \mathbf{f}_i = \mathbf{f}^{pressure}_i + \mathbf{f}^{viscosity}_i
+\]
+
+\subsubsection{Computing Velocity and Position}
+
+The acceleration of a particle is computed using Newton's second law:
+\[
+  \mathbf{a}_i = \frac{\mathbf{f}_i}{m_i}
+\]
+
+The velocity and position of the particle are updated using the following equations:
+\[
+  \mathbf{v}_i = \mathbf{v}_i + \mathbf{a}_i \Delta t
+\]
+\[
+  \mathbf{x}_i = \mathbf{x}_i + \mathbf{v}_i \Delta t
+\]
+Where $\mathbf{v}_i$ is the velocity of particle $i$, $\mathbf{x}_i$ is the position of particle $i$, and $\Delta t$ is the time step of the simulation.
+
+\subsubsection{Optimization}
+
+The SPH simulation can be computationally expensive, especially for large numbers of particles.
+To optimize the simulation, we can use the Spartial hashing technique to efficiently find neighboring particles.
+
+Spartial hashing is a technique that divides the simulation space into a grid of cells, where each cell contains list of particles that are located in that cell.
+When computing the neighboring particles for a give particle, we only need to check the particles in the same cell and the neighboring cells.
+This reduces the number of particle interactions that need to be computed, resulting in a significant performance improvement.
+
+\section{Rendering}
+
+We render the simulation using OpenGL, which allows for real-time rendering of the fluid dynamics.
+In each frame, we assume that the time step is constant, and we update the simulation using the SPH equations.
+
+\medskip
+
+Our implementation uses double buffering to avoid flickering and tearing in the rendering.
+In our implementation, the particles are rendered as spheres which created by the shader program.
+The shader program is responsible for computing the color and lighting of the particles based on their properties.
+
+\nocite{*}
+\printbibliography
+
+\pagebreak
+\section*{Appendix}
+
+Our source code is available at \href{https://github.com/MasterIceZ/SPH-FluidSimulation}{Github} and the video demo is available at \href{}{Youtube}.
+
+\end{document}

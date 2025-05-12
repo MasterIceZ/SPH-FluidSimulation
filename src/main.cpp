@@ -12,7 +12,6 @@
 
 #include "handler/glfw_window_handler.hpp"
 #include "handler/imgui_handler.hpp"
-#include "handler/renderer.hpp"
 #include "handler/shader_handler.hpp"
 
 #include "types/particle.hpp"

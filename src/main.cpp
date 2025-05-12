@@ -42,6 +42,13 @@ float rest_density = 2000.0f;
 float gas_constant = 2.0f;
 float viscosity = 1.04f;
 
+// mouse position
+float mouse_x = 0.0f;
+float mouse_y = 0.0f;
+
+//flag
+bool add_flag = false;
+
 glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) WINDOW_WIDTH/ (float) WINDOW_HEIGHT, 0.1f, 100.0f);
 camera_t camera(
   glm::vec3(0.0f),  
@@ -52,13 +59,34 @@ camera_t camera(
 
 // Callback function for mouse movement
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-  std::cout << "Mouse moved to: " << xpos << ", " << ypos << std::endl;
+  mouse_x = static_cast<float>(xpos);
+  mouse_y = static_cast<float>(ypos);
 }
 
 // Callback for mouse button input
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
       std::cout << "Left mouse button pressed!" << std::endl;
+      std::cout << "Mouse position: (" << mouse_x << ", " << mouse_y << ")" << std::endl;
+      add_flag = true;
+      std::cout << "----------------------------------------" << std::endl;
+  }
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+      std::cout << "Key Pressed: " << key << std::endl;
+      if(key == GLFW_KEY_A) {
+        rotate_xz_angle -= 1.0f;
+        if(rotate_xz_angle < -180.0f) {
+          rotate_xz_angle += 360.0f;
+        }
+      } else if(key == GLFW_KEY_D) {
+        rotate_xz_angle += 1.0f;
+        if(rotate_xz_angle > 180.0f) {
+          rotate_xz_angle -= 360.0f;
+        }
+      }
   }
 }
 
@@ -69,9 +97,10 @@ signed main(int argc, char *argv[]) {
   // Register the callbacks
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetMouseButtonCallback(window, mouse_button_callback);
+  glfwSetKeyCallback(window, key_callback);
 
   std::vector<particle_t> particles;
-  generate_random_particle(particles, -0.4f, 0.4f,  750);
+  generate_random_particle(particles, -0.4f, 0.4f,  650);
 
   GLuint particle_shader = create_shader_program(
     "shader/particle/vertex_shader.glsl",
@@ -82,12 +111,13 @@ signed main(int argc, char *argv[]) {
 
   int bucket = 0;
   std::array<std::vector<particle_t>, 2> particles_buckets;
+  std::vector<glm::vec3> particles_positions = generate_particle_positions(particles_buckets[bucket]);
 
   particles_buckets[bucket] = particles;
 
   GLuint VAO, VBO;
 
-  std::vector<glm::vec3> particles_positions = generate_particle_positions(particles_buckets[bucket]);
+  particles_positions = generate_particle_positions(particles_buckets[bucket]);
   
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -183,6 +213,18 @@ signed main(int argc, char *argv[]) {
 
 
   while (!glfwWindowShouldClose(window)) {
+
+    if(add_flag) {
+      particles_buckets[bucket].push_back({
+        glm::vec3(0.0f, 0.4f, 0.0f), 
+        glm::vec3(0), 
+        glm::vec3(-1), 
+        1.0f, 
+        1.0f
+      });
+      add_flag = false;
+    }
+
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -196,6 +238,7 @@ signed main(int argc, char *argv[]) {
     camera.updateCameraPosition();
     glm::mat4 view = camera.get_view_matrix();
 
+    
     particles_buckets[!bucket] = sph_solver(particles_buckets[bucket]);
     particles_positions = generate_particle_positions(particles_buckets[!bucket]);
 

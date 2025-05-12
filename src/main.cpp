@@ -18,6 +18,7 @@
 #include "types/particle.hpp"
 #include "types/camera.hpp"
 
+#include "objects.hpp"
 #include "utils.hpp"
 
 #include "solver/solver.hpp"
@@ -46,9 +47,6 @@ float viscosity = 1.04f;
 float mouse_x = 0.0f;
 float mouse_y = 0.0f;
 
-//flag
-bool add_flag = false;
-
 glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) WINDOW_WIDTH/ (float) WINDOW_HEIGHT, 0.1f, 100.0f);
 camera_t camera(
   glm::vec3(0.0f),  
@@ -57,50 +55,18 @@ camera_t camera(
   30.0f
 );
 
-// Callback function for mouse movement
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-  mouse_x = static_cast<float>(xpos);
-  mouse_y = static_cast<float>(ypos);
-}
-
-// Callback for mouse button input
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-      std::cout << "Left mouse button pressed!" << std::endl;
-      std::cout << "Mouse position: (" << mouse_x << ", " << mouse_y << ")" << std::endl;
-      add_flag = true;
-      std::cout << "----------------------------------------" << std::endl;
-  }
-}
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-  if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-      std::cout << "Key Pressed: " << key << std::endl;
-      if(key == GLFW_KEY_A) {
-        rotate_xz_angle -= 1.0f;
-        if(rotate_xz_angle < -180.0f) {
-          rotate_xz_angle += 360.0f;
-        }
-      } else if(key == GLFW_KEY_D) {
-        rotate_xz_angle += 1.0f;
-        if(rotate_xz_angle > 180.0f) {
-          rotate_xz_angle -= 360.0f;
-        }
-      }
-  }
-}
-
 signed main(int argc, char *argv[]) {
   GLFWwindow *window = initialize_window();
   initialize_imgui(window);
 
-  // Register the callbacks
-  glfwSetCursorPosCallback(window, mouse_callback);
-  glfwSetMouseButtonCallback(window, mouse_button_callback);
-  glfwSetKeyCallback(window, key_callback);
-
   std::vector<particle_t> particles;
   generate_random_particle(particles, -0.4f, 0.4f,  650);
+
+  int bucket = 0;
+  std::array<std::vector<particle_t>, 2> particles_buckets;
+  std::vector<glm::vec3> particles_positions = generate_particle_positions(particles_buckets[bucket]);
+
+  particles_buckets[bucket] = particles;
 
   GLuint particle_shader = create_shader_program(
     "shader/particle/vertex_shader.glsl",
@@ -109,45 +75,10 @@ signed main(int argc, char *argv[]) {
   GLint loc_proj_particle = glGetUniformLocation(particle_shader, "projection");
   GLint loc_view_particle = glGetUniformLocation(particle_shader, "view");
 
-  int bucket = 0;
-  std::array<std::vector<particle_t>, 2> particles_buckets;
-  std::vector<glm::vec3> particles_positions = generate_particle_positions(particles_buckets[bucket]);
-
-  particles_buckets[bucket] = particles;
+  particles_positions = generate_particle_positions(particles_buckets[bucket]);
 
   GLuint VAO, VBO;
-
-  particles_positions = generate_particle_positions(particles_buckets[bucket]);
-  
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-
-  glBindVertexArray(VAO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(
-    GL_ARRAY_BUFFER, 
-    particles_positions.size() * sizeof(glm::vec3),
-    particles_positions.data(), 
-    GL_DYNAMIC_DRAW
-  );
-
-  glVertexAttribPointer(
-    0, 
-    3, 
-    GL_FLOAT, 
-    GL_FALSE, 
-    sizeof(glm::vec3), 
-    (void *) 0
-  );
-  glEnableVertexAttribArray(0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
-
-  glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-  glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-  glPointSize(10.0f);
+  add_particles(particles_positions, VBO, VAO);
 
   GLuint border_shader = create_shader_program(
     "shader/border/vertex_shader.glsl",
@@ -175,56 +106,9 @@ signed main(int argc, char *argv[]) {
   };
 
   GLuint border_VAO, border_VBO, border_EBO;
-
-  glGenVertexArrays(1, &border_VAO);
-  glGenBuffers(1, &border_VBO);
-  glGenBuffers(1, &border_EBO);
-
-  glBindVertexArray(border_VAO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, border_VBO);
-  glBufferData(
-    GL_ARRAY_BUFFER, 
-    border_vertices.size() * sizeof(glm::vec3),
-    border_vertices.data(),
-    GL_STATIC_DRAW
-  );
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, border_EBO);
-  glBufferData(
-    GL_ELEMENT_ARRAY_BUFFER,
-    border_indices.size() * sizeof(unsigned int),
-    border_indices.data(), 
-    GL_STATIC_DRAW
-  );
-
-  glVertexAttribPointer(
-    0, 
-    3, 
-    GL_FLOAT, 
-    GL_FALSE, 
-    sizeof(glm::vec3), 
-    (void *) 0
-  );
-  glEnableVertexAttribArray(0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
-
+  add_border(border_vertices, border_indices, border_VAO, border_VBO, border_EBO);
 
   while (!glfwWindowShouldClose(window)) {
-
-    if(add_flag) {
-      particles_buckets[bucket].push_back({
-        glm::vec3(0.0f, 0.4f, 0.0f), 
-        glm::vec3(0), 
-        glm::vec3(-1), 
-        1.0f, 
-        1.0f
-      });
-      add_flag = false;
-    }
-
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -238,7 +122,6 @@ signed main(int argc, char *argv[]) {
     camera.updateCameraPosition();
     glm::mat4 view = camera.get_view_matrix();
 
-    
     particles_buckets[!bucket] = sph_solver(particles_buckets[bucket]);
     particles_positions = generate_particle_positions(particles_buckets[!bucket]);
 

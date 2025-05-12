@@ -78,7 +78,7 @@ Our Implementation uses the following kernel functions:
     \begin{equation}
       \nonumber
       W_{poly6}(\mathbf{r}, h) = \frac{315}{64 \pi h^9} \begin{cases}
-        (h^2 - r^2)^3 & \text{if } r < h \\
+        (h^2 - r_i^2)^3 & \text{if } r < h \\
         0 & \text{otherwise}
       \end{cases}
     \end{equation}
@@ -86,15 +86,15 @@ Our Implementation uses the following kernel functions:
     \begin{equation}
     \nonumber
       W_{spiky}(\mathbf{r}, h) = \frac{15}{\pi h^6} \begin{cases}
-        (h - r)^3 & \text{if } 0 \le r \le h \\
+        (h - r_i)^3 & \text{if } 0 \le r_i \le h \\
         0 & \text{otherwise}
       \end{cases}
     \end{equation}
   \item \textbf{Viscosity kernel}:
     \begin{equation}
     \nonumber
-      W_{visc}(\mathbf{r}, h) = \frac{15}{2 \pi h^3} \begin{cases}
-        -\frac{r^3}{2h^3} + \frac{r^2}{h^2} + \frac{h}{2r} - 1 & \text{if } 0 \le r \le h \\
+      W_{visc}(\mathbf{r_i}, h) = \frac{15}{2 \pi h^3} \begin{cases}
+        -\frac{r_i^3}{2h^3} + \frac{r_i^2}{h^2} + \frac{h}{2r_i} - 1 & \text{if } 0 \le r_i \le h \\
         0 & \text{otherwise}
       \end{cases}
     \end{equation}
@@ -108,10 +108,10 @@ The smoothing length $h$ determines the range of influence of a particle on its 
 
 The density of a particle is computed using the $W_{poly6}$ kernel. By the definition of the density, we have:
 \[
-  \rho_i = \sum_{j}m_j W_{poly6}(\mathbf{r} - \mathbf{r}_j, h)
+  \rho_i = \sum_{j}m_j W_{poly6}(\mathbf{r}_i - \mathbf{r}_j, h)
 \]
 
-where $m_j$ is the mass of particle $j$, $\mathbf{r}$ is the position of particle $i$, and $\mathbf{r}_j$ is the position of particle $j$.
+where $m_j$ is the mass of particle $j$, $\mathbf{r}_i$ is the position of particle $i$, and $\mathbf{r}_j$ is the position of particle $j$.
 
 In this implementation, we use the ideal gas equation of state to compute the pressure of the fluid:
 \[
@@ -128,13 +128,13 @@ The are two main forces acting on the particles in the simulation:
     The pressure force is computed using the $W_{spiky}$ kernel. The pressure force acting on particle $i$ is given by:
     \begin{equation}
     \nonumber
-      \mathbf{f}^{pressure}_i = -\sum_{j} m_j \cdot \frac{p_i + p_j}{2 \rho_j} \nabla W_{spiky}(\mathbf{r} - \mathbf{r}_j, h)
+      \mathbf{f}^{pressure}_i = -\sum_{j} m_j \cdot \frac{p_i + p_j}{2 \rho_j} \nabla W_{spiky}(\mathbf{r}_i - \mathbf{r}_j, h)
     \end{equation}
   \item \textbf{Viscosity force}:
     The viscosity force is computed using the $W_{visc}$ kernel. The viscosity force acting on particle $i$ is given by:
     \begin{equation}
     \nonumber
-      \mathbf{f}^{viscosity}_i = \mu \cdot \sum_{j} m_j \cdot \frac{v_j - v_i}{\rho_j} \nabla^2 W_{visc}(\mathbf{r} - \mathbf{r}_j, h)
+      \mathbf{f}^{viscosity}_i = \mu \cdot \sum_{j} m_j \cdot \frac{v_j - v_i}{\rho_j} \nabla^2 W_{visc}(\mathbf{r}_i - \mathbf{r}_j, h)
     \end{equation}
 \end{itemize}
 
@@ -149,17 +149,18 @@ Total force acting on particle $i$ is given by:
 
 The acceleration of a particle is computed by:
 \[
-  \mathbf{a}_i = \frac{\mathbf{f}_i}{\rho_i}
+  \mathbf{a}_i = \frac{\mathbf{f}_i}{\rho_i} + \mathbf{g}
 \]
 
 The velocity and position of the particle are updated using the following equations:
 \[
-  \mathbf{v}_i = \mathbf{v}_i + \mathbf{a}_i \Delta t
+  \mathbf{v}_i^* = \mathbf{v}_i + \mathbf{a}_i \Delta t
 \]
 \[
-  \mathbf{x}_i = \mathbf{x}_i + \mathbf{v}_i \Delta t
+  \mathbf{x}_i^* = \mathbf{x}_i + \mathbf{v}_i^* \Delta t
 \]
-Where $\mathbf{v}_i$ is the velocity of particle $i$, $\mathbf{x}_i$ is the position of particle $i$, and $\Delta t$ is the time step of the simulation.
+
+where $v_i^*$ is the updated velocity, $x_i^*$ is the updated position, and $\Delta t$ is the time step.
 
 \subsubsection{Optimization}
 

@@ -132,7 +132,6 @@ std::vector<particle_t> sph_solver(const std::vector<particle_t> &particles)
 
     acceleration += glm::vec3(0.0f, -gravity, 0.0f);
 
-
     particle.velocity += acceleration * time_step;
     // particle.velocity = glm::clamp(particle.velocity, -10000.0f, 10000.0f);
 
@@ -157,15 +156,7 @@ std::vector<particle_t> sph_solver(const std::vector<particle_t> &particles)
         }
       }
     }
-    // std::cout << "Debug motherfucker" << std::endl;
-    // std::cout << particle.position.x << " " << particle.position.y << " " << particle.position.z << std::endl;
   }
-  // std::cout << "fuck you length" << std::endl;
-  // for(int i=0; i<(int) particles.size(); ++i) {
-  //   for(int j=i+1; j<(int) particles.size(); ++j) {
-  //     std::cout << glm::length(new_particles[i].position - new_particles[j].position) << std::endl;
-  //   }
-  // }
   return new_particles;
 }
 

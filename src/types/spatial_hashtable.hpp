@@ -15,7 +15,7 @@ struct spatial_hash_table_t {
   spatial_hash_table_t(float cell_size): 
     cell_size(cell_size) {}
   
-  size_t hasher(const glm::vec3 &p) const {
+  size_t hasher(const glm::ivec3 &p) const {
     constexpr size_t HP_1 = 73856093;
     constexpr size_t HP_2 = 19349663;
     constexpr size_t HP_3 = 83492791;
@@ -49,9 +49,6 @@ struct spatial_hash_table_t {
     for(int dz=-1; dz<=1; ++dz) {
       for(int dy=-1; dy<=1; ++dy) {
         for(int dx=-1; dx<=1; ++dx) {
-          if(dx == 0 && dy == 0 && dz == 0) {
-            continue;
-          }
           glm::ivec3 neighbor_cell = cell + glm::ivec3(dx, dy, dz);
           size_t neightbor_key = hasher(neighbor_cell);
           auto it = grid.find(neightbor_key);

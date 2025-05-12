@@ -31,16 +31,16 @@ const glm::vec3 border_min = glm::vec3(-0.5, -0.5, -0.5);
 
 // general settings
 float rotate_xz_angle = -60.0f;
-float smooth_length = 0.09f;
+float smooth_length = 0.10f;
 float time_step = 0.01f;
 float gravity = 9.8f;
-const float damp = 0.25f;
+const float damp = 0.3f;
 
 // particle properties
-float mass = 0.02f;
-float rest_density = 1.0f;
-float gas_constant = 1.0f;
-float viscosity = 3.0f;
+float mass = 1000.0f * 0.125f * smooth_length * smooth_length * smooth_length;
+float rest_density = 2000.0f;
+float gas_constant = 2.0f;
+float viscosity = 1.04f;
 
 glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) WINDOW_WIDTH/ (float) WINDOW_HEIGHT, 0.1f, 100.0f);
 camera_t camera(
@@ -50,12 +50,28 @@ camera_t camera(
   30.0f
 );
 
+// Callback function for mouse movement
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+  std::cout << "Mouse moved to: " << xpos << ", " << ypos << std::endl;
+}
+
+// Callback for mouse button input
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+      std::cout << "Left mouse button pressed!" << std::endl;
+  }
+}
+
 signed main(int argc, char *argv[]) {
   GLFWwindow *window = initialize_window();
   initialize_imgui(window);
 
+  // Register the callbacks
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
+
   std::vector<particle_t> particles;
-  generate_random_particle(particles, -0.4f, 0.4f,  400);
+  generate_random_particle(particles, -0.4f, 0.4f,  750);
 
   GLuint particle_shader = create_shader_program(
     "shader/particle/vertex_shader.glsl",

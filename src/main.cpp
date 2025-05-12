@@ -18,6 +18,8 @@
 #include "types/particle.hpp"
 #include "types/camera.hpp"
 
+#include "utils.hpp"
+
 #include "solver/solver.hpp"
 
 // configuration
@@ -48,68 +50,12 @@ camera_t camera(
   30.0f
 );
 
-void show_particles(const std::vector<particle_t> &particles) {
-  for (const auto &particle : particles) {
-    std::cout << "Particle position: (" << particle.position.x << ", "
-              << particle.position.y << ", " << particle.position.z << ")"
-              << std::endl;
-    std::cout << "Particle velocity: (" << particle.velocity.x << ", "
-              << particle.velocity.y << ", " << particle.velocity.z << ")"
-              << std::endl;
-    std::cout << "Particle force: (" << particle.force.x << ", "
-              << particle.force.y << ", " << particle.force.z << ")" << std::endl;
-  }
-  std::cout << "----------------------------------------" << std::endl;
-}
-
-std::vector<particle_t> normalize_particle(const std::vector<particle_t> &particles, float max_range) {
-  std::vector<particle_t> normalized_particles;
-
-  glm::vec3 range = glm::vec3(20, 20, 20);
-
-  for (auto particle : particles) {
-    particle.position.x = ((particle.position.x - border_min.x) / range.x) * 2.0f - 1.0f;
-    particle.position.y = ((particle.position.y - border_min.y) / range.y) * 2.0f - 1.0f;
-    particle.position.z = ((particle.position.z - border_min.z) / range.z) * 2.0f - 1.0f;
-
-    normalized_particles.push_back(particle);
-  }
-
-  return normalized_particles;
-}
-
-std::vector<glm::vec3> generate_particle_positions(const std::vector<particle_t> &particles) {
-  std::vector<glm::vec3> positions;
-  for (const auto &particle : particles) {
-    positions.push_back(particle.position);
-  }
-  return positions;
-}
-
 signed main(int argc, char *argv[]) {
   GLFWwindow *window = initialize_window();
   initialize_imgui(window);
 
   std::vector<particle_t> particles;
-  std::mt19937 rng(std::random_device{}());
-  std::uniform_real_distribution<float> dist(-0.4f, 0.4f);
-
-  std::vector<glm::vec3> points;
-  for (int i = 0; i < 750; ++i) {
-    float x = dist(rng);
-    float y = dist(rng);
-    float z = dist(rng);
-    points.emplace_back(x, y, z);
-  }
-  for(int i = 0; i < points.size(); ++i) {
-    particles.push_back({
-      glm::vec3(points[i].x, points[i].y, points[i].z), 
-      glm::vec3(0), 
-      glm::vec3(-1), 
-      0.0f, 
-      0.0f
-    });
-  }
+  generate_random_particle(particles, -0.4f, 0.4f, 300);
 
   GLuint particle_shader = create_shader_program(
     "shader/particle/vertex_shader.glsl",
@@ -267,7 +213,7 @@ signed main(int argc, char *argv[]) {
 
     glDrawElements(
       GL_LINES, 
-      static_cast<GLsizei>(border_indices.size()), 
+      static_cast<GLsizei> (border_indices.size()), 
       GL_UNSIGNED_INT, 
       0
     );

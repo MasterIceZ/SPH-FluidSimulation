@@ -8,11 +8,10 @@
 #include <vector>
 #include <algorithm>
 
-class spatial_hash_table_t {
-private:
+struct spatial_hash_table_t {
   float cell_size;
   std::unordered_map<size_t, std::vector<int>> grid;
- public:
+  
   spatial_hash_table_t(float cell_size): 
     cell_size(cell_size) {}
   
@@ -71,10 +70,6 @@ private:
 
   void clear() {
     grid.clear();
-  }
-
-  void reserve(size_t capacity) {
-    grid.reserve(capacity);
   }
 };
 

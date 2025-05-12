@@ -16,42 +16,6 @@
 #define RIGHT 3
 
 extern const int WINDOW_WIDTH, WINDOW_HEIGHT;
-// extern bool edit_mode;
-// extern camera_t camera;
-// extern float lastX, lastY;
-// extern bool firstMouse;
-
-// void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-//   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-//     edit_mode = !edit_mode;
-
-//     if(edit_mode) {
-//       glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-//     } else {
-//       glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-//     }
-//   }
-// }
-
-// void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
-//   if (firstMouse) {
-//     lastX = xpos;
-//     lastY = ypos;
-//     firstMouse = false;
-//   }
-
-//   float xOffset = xpos - lastX;
-//   float yOffset = lastY - ypos;
-
-//   lastX = xpos;
-//   lastY = ypos;
-
-//   if(edit_mode) {
-//     return ;
-//   }
-
-//   camera.process_mouse_movement(xOffset, yOffset);
-// }
 
 void glfw_error_callback(int error, const char* description) {
   std::cerr << "GLFW Error: " << error << ": " << description << std::endl;
@@ -90,20 +54,11 @@ GLFWwindow *initialize_window() {
     exit(-1);
   }
 
-  // glEnable(GL_CULL_FACE);
-  // glCullFace(GL_BACK);
-  // glFrontFace(GL_CCW);
-  // glEnable(GL_DEPTH_TEST);
-  // glDisable(GL_CULL_FACE);
-
   glEnable(GL_PROGRAM_POINT_SIZE);
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
   glEnable(GL_BLEND);
-  // glEnable(GL_DEPTH_TEST);
+  glEnable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  // glfwSetCursorPosCallback(window, mouse_callback);
-  // glfwSetKeyCallback(window, key_callback);
 
   return window;
 }

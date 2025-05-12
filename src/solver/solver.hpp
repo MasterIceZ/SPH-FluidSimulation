@@ -27,22 +27,24 @@ extern float gas_constant;
 extern float particle_gamma;
 extern float viscosity;
 
-std::vector<particle_t> calculate_density_and_pressure(const std::vector<particle_t> &particles) {
+std::vector<particle_t> calculate_density_and_pressure(const std::vector<particle_t> &particles, const spatial_hash_table_t &spatial) {
   std::vector<particle_t> new_particles = particles;
   for(int i=0; i<(int) particles.size(); ++i) {
     particle_t &particle = new_particles[i];
     
     particle.density = mass * w_poly6(glm::vec3(0.0f));
-    
-    for(int j=0; j<(int) particles.size(); ++j) {
+
+    std::vector<int> neighbors = spatial.find_neighbors(particle.position);
+    for(auto j: neighbors) {
       if(i == j) {
         continue;
       }
-      
       const particle_t &other = particles[j];
       
       glm::vec3 r = particle.position - other.position;
-      if(glm::length(r) > smooth_length) {
+      float r2 = glm::dot(r, r);
+      float h2 = smooth_length * smooth_length;
+      if(r2 > h2) {
         continue;
       }
 
@@ -53,7 +55,7 @@ std::vector<particle_t> calculate_density_and_pressure(const std::vector<particl
   return new_particles;
 }
 
-std::vector<particle_t> calculate_forces(const std::vector<particle_t> &particles) {
+std::vector<particle_t> calculate_forces(const std::vector<particle_t> &particles, const spatial_hash_table_t &spatial) {
   std::vector<particle_t> new_particles = particles;
   for(int i=0; i<(int) particles.size(); ++i) {
     particle_t &particle = new_particles[i];
@@ -62,7 +64,8 @@ std::vector<particle_t> calculate_forces(const std::vector<particle_t> &particle
     glm::vec3 viscosity_force = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 pressure_force = glm::vec3(0.0f, 0.0f, 0.0f);
     
-    for(int j=0; j<(int) particles.size(); ++j) {
+    std::vector<int> neighbors = spatial.find_neighbors(particle.position);
+    for(auto j: neighbors) {
       if(i == j) {
         continue;
       }
@@ -70,7 +73,9 @@ std::vector<particle_t> calculate_forces(const std::vector<particle_t> &particle
       const particle_t &other = particles[j];
 
       glm::vec3 r = particle.position - other.position;
-      if(glm::length(r) <= EPS || glm::length(r) > smooth_length) {
+      float r2 = glm::dot(r, r);
+      float h2 = smooth_length * smooth_length;
+      if(r2 <= EPS || r2 > h2) {
         continue;
       }
 
@@ -80,8 +85,14 @@ std::vector<particle_t> calculate_forces(const std::vector<particle_t> &particle
       float p = particle.pressure + other.pressure;
       glm::vec3 direction = glm::normalize(r);
       pressure_force -= direction * mass * (p / (2.0f * other.density)) * w_spiky(r);
+
+      if(r2 < 0.01f * 0.01f) {
+        glm::vec3 repulsion = glm::normalize(r) * (0.01f - (float) sqrt(r2)) * 100.0f;
+        particle.force += repulsion;
+      }
     }
     particle.force = pressure_force + viscosity_force;
+    particle.force = glm::clamp(particle.force, -100.0f, 100.0f);
   }
   return new_particles;
 }
@@ -89,8 +100,14 @@ std::vector<particle_t> calculate_forces(const std::vector<particle_t> &particle
 std::vector<particle_t> sph_solver(const std::vector<particle_t> &particles) {
   std::vector<particle_t> new_particles;
 
-  new_particles = calculate_density_and_pressure(particles);
-  new_particles = calculate_forces(new_particles);
+  spatial_hash_table_t spartial(smooth_length);
+  for(int i=0; i<(int) particles.size(); ++i) {
+    const particle_t &particle = particles[i];
+    spartial.insert(i, particle.position);
+  }
+
+  new_particles = calculate_density_and_pressure(particles, spartial);
+  new_particles = calculate_forces(new_particles, spartial);
 
   for(auto &particle: new_particles) {
     glm::vec3 acceleration = particle.force / particle.density;

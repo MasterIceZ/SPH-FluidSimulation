@@ -31,7 +31,7 @@ const glm::vec3 border_min = glm::vec3(-0.5, -0.5, -0.5);
 
 // general settings
 float rotate_xz_angle = -60.0f;
-float smooth_length = 0.06f;
+float smooth_length = 0.09f;
 float time_step = 0.01f;
 float gravity = 9.8f;
 const float damp = 0.25f;
@@ -40,7 +40,7 @@ const float damp = 0.25f;
 float mass = 0.02f;
 float rest_density = 1.0f;
 float gas_constant = 1.0f;
-float viscosity = 1.04f;
+float viscosity = 3.0f;
 
 glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) WINDOW_WIDTH/ (float) WINDOW_HEIGHT, 0.1f, 100.0f);
 camera_t camera(
@@ -55,7 +55,7 @@ signed main(int argc, char *argv[]) {
   initialize_imgui(window);
 
   std::vector<particle_t> particles;
-  generate_random_particle(particles, -0.4f, 0.4f, 300);
+  generate_random_particle(particles, -0.4f, 0.4f,  400);
 
   GLuint particle_shader = create_shader_program(
     "shader/particle/vertex_shader.glsl",
@@ -120,7 +120,7 @@ signed main(int argc, char *argv[]) {
     glm::vec3(border_max.x, border_max.y, border_min.z),
     border_max,
     glm::vec3(border_min.x, border_max.y, border_max.z)
-};
+  };
 
   std::vector<unsigned int> border_indices = {
     0, 1, 1, 2, 2, 3, 3, 0,
@@ -165,8 +165,6 @@ signed main(int argc, char *argv[]) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
-  glEnable(GL_DEPTH_TEST);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);

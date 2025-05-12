@@ -132,7 +132,6 @@ std::vector<particle_t> sph_solver(const std::vector<particle_t> &particles)
 
     acceleration += glm::vec3(0.0f, -gravity, 0.0f);
 
-
     particle.velocity += acceleration * time_step;
     // particle.velocity = glm::clamp(particle.velocity, -10000.0f, 10000.0f);
 

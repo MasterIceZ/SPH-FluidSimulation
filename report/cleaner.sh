@@ -11,4 +11,4 @@ find . -type f -name '*.xml' -delete
 find . -type f -name '*.bbl' -delete
 find . -type f -name '*.blg' -delete
 
-rm main-blx.bib
+rm report-blx.bib

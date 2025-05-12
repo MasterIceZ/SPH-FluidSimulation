@@ -25,6 +25,12 @@ Smooth Particle Hydrodynamic (SPH) is a computational method for simulating flui
 This method is based on the Lagrangian approach, where the fluid is represented by a set of particles that carry properties such as mass, velocity, and density.
 The particles move with the fluid flow, and their properties are updated based on the interactions with neighboring particles.
 
+In SPH, we use the Navier-Stokes equations to describe the motion of the fluid.
+
+\[
+  \rho \mathbf{a} = -\nabla P + \mu \nabla^2 \mathbf{v} + \rho \mathbf{g}
+\]
+
 \section{Project Overview}
 
 The primary objective of this project is to implement a fluid simulation using the Largrangian method, specifically the SPH method.
@@ -141,9 +147,9 @@ Total force acting on particle $i$ is given by:
 
 \subsubsection{Computing Velocity and Position}
 
-The acceleration of a particle is computed using Newton's second law:
+The acceleration of a particle is computed by:
 \[
-  \mathbf{a}_i = \frac{\mathbf{f}_i}{m_i}
+  \mathbf{a}_i = \frac{\mathbf{f}_i}{\rho_i}
 \]
 
 The velocity and position of the particle are updated using the following equations:
@@ -175,12 +181,18 @@ Our implementation uses double buffering to avoid flickering and tearing in the 
 In our implementation, the particles are rendered as spheres which created by the shader program.
 The shader program is responsible for computing the color and lighting of the particles based on their properties.
 
+\section{Limitations}
+
+Due to the stability of the simulation, the parameters of the simulation must be carefully tuned to achieve stable and realistic results.
+Currently, our implementation does not support the simulation of complex fluid interactions, such as surface tension and turbulence.
+These interactions can be added in future work to improve the realism of the simulation.
+Additionally, the simulation is limited to incompressible fluids, and the equation of state used in the simulation is a simple ideal gas equation.
+
 \nocite{*}
 \printbibliography
 
-\pagebreak
 \section*{Appendix}
 
-Our source code is available at \href{https://github.com/MasterIceZ/SPH-FluidSimulation}{Github} and the video demo is available at \href{}{Youtube}.
+Our source code is available at \href{https://github.com/MasterIceZ/SPH-FluidSimulation}{Github} and the video demo is available at \href{https://youtube.com}{Youtube}.
 
 \end{document}

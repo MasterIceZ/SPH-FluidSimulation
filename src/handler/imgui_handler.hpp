@@ -10,15 +10,13 @@
 
 #include <cstdbool>
 
-extern float r_value, g_value, b_value;
-// extern float sensitivity;
-// extern bool edit_mode;
+extern float rotate_xz_angle;
 
 void initialize_imgui(GLFWwindow *window) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
-  (void)io;
+  (void) io;
 
   ImGui::StyleColorsDark();
 
@@ -27,10 +25,6 @@ void initialize_imgui(GLFWwindow *window) {
 }
 
 void render_imgui() {
-  // if(!edit_mode) {
-  //   return ;
-  // }
-
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -38,17 +32,11 @@ void render_imgui() {
   ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
   ImGui::Begin("Parameters Controller");
   // ImGui::SliderFloat("Sensitivity", &sensitivity, 0.0f, 1.0f);
-  ImGui::SliderFloat("R", &r_value, 0.0f, 1.0f);
-  ImGui::SliderFloat("G", &g_value, 0.0f, 1.0f);
-  ImGui::SliderFloat("B", &b_value, 0.0f, 1.0f);
+  ImGui::SliderFloat("Rotation", &rotate_xz_angle, -180.0f, 180.0f);
   ImGui::End();
 }
 
 void render_imgui_draw_data() {
-  // if(!edit_mode) {
-  //   return ;
-  // }
-
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

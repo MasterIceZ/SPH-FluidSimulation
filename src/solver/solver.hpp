@@ -108,12 +108,16 @@ std::vector<particle_t> sph_solver(const std::vector<particle_t> &particles) {
 
     for (int axis = 0; axis < 3; ++axis) {
       if(particle.position[axis] < border_min[axis]) {
-          particle.position[axis] = border_min[axis];
+        particle.position[axis] = border_min[axis];
+        if(particle.velocity[axis] < 0.0f) {
           particle.velocity[axis] *= -damp;
+        }
       }
       else if(particle.position[axis] > border_max[axis]) {
-          particle.position[axis] = border_max[axis];
+        particle.position[axis] = border_max[axis];
+        if(particle.velocity[axis] > 0.0f) {
           particle.velocity[axis] *= -damp;
+        } 
       }
     }
   }

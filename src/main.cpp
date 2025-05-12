@@ -20,20 +20,19 @@
 
 #include "solver/solver.hpp"
 
+// configuration
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 800;
 const float EPS = 0.0001f;
-
-// static variables
-float r_value = 0.0f, g_value = 0.0f, b_value = 0.0f;
 const glm::vec3 border_max = glm::vec3(0.5, 0.5, 0.5);
 const glm::vec3 border_min = glm::vec3(-0.5, -0.5, -0.5);
 
 // general settings
-float smooth_length = 0.045f;
-float time_step = 0.05f;
+float rotate_xz_angle = -60.0f;
+float smooth_length = 0.06f;
+float time_step = 0.01f;
 float gravity = 9.8f;
-const float damp = 0.1f;
+const float damp = 0.25f;
 
 // particle properties
 float mass = 0.02f;
@@ -42,14 +41,12 @@ float gas_constant = 1.0f;
 float viscosity = 1.04f;
 
 glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) WINDOW_WIDTH/ (float) WINDOW_HEIGHT, 0.1f, 100.0f);
-camera_t cam(
+camera_t camera(
   glm::vec3(0.0f),  
   3.5f,
-  -60.0f,
+  -rotate_xz_angle,
   30.0f
 );
-
-glm::mat4 view = cam.get_view_matrix();
 
 void show_particles(const std::vector<particle_t> &particles) {
   for (const auto &particle : particles) {
@@ -65,19 +62,15 @@ void show_particles(const std::vector<particle_t> &particles) {
   std::cout << "----------------------------------------" << std::endl;
 }
 
-std::vector<particle_t> normalize_particle(
-    const std::vector<particle_t> &particles, float max_range) {
+std::vector<particle_t> normalize_particle(const std::vector<particle_t> &particles, float max_range) {
   std::vector<particle_t> normalized_particles;
 
   glm::vec3 range = glm::vec3(20, 20, 20);
 
   for (auto particle : particles) {
-    particle.position.x =
-        ((particle.position.x - border_min.x) / range.x) * 2.0f - 1.0f;
-    particle.position.y =
-        ((particle.position.y - border_min.y) / range.y) * 2.0f - 1.0f;
-    particle.position.z =
-        ((particle.position.z - border_min.z) / range.z) * 2.0f - 1.0f;
+    particle.position.x = ((particle.position.x - border_min.x) / range.x) * 2.0f - 1.0f;
+    particle.position.y = ((particle.position.y - border_min.y) / range.y) * 2.0f - 1.0f;
+    particle.position.z = ((particle.position.z - border_min.z) / range.z) * 2.0f - 1.0f;
 
     normalized_particles.push_back(particle);
   }
@@ -95,14 +88,14 @@ std::vector<glm::vec3> generate_particle_positions(const std::vector<particle_t>
 
 signed main(int argc, char *argv[]) {
   GLFWwindow *window = initialize_window();
-  // initialize_imgui(window);
+  initialize_imgui(window);
 
   std::vector<particle_t> particles;
   std::mt19937 rng(std::random_device{}());
   std::uniform_real_distribution<float> dist(-0.4f, 0.4f);
 
   std::vector<glm::vec3> points;
-  for (int i = 0; i < 3000; ++i) {
+  for (int i = 0; i < 750; ++i) {
     float x = dist(rng);
     float y = dist(rng);
     float z = dist(rng);
@@ -237,7 +230,11 @@ signed main(int argc, char *argv[]) {
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
 
-    // render_imgui();
+    render_imgui();
+
+    camera.yaw = rotate_xz_angle;
+    camera.updateCameraPosition();
+    glm::mat4 view = camera.get_view_matrix();
 
     particles_buckets[!bucket] = sph_solver(particles_buckets[bucket]);
     particles_positions = generate_particle_positions(particles_buckets[!bucket]);
@@ -251,7 +248,7 @@ signed main(int argc, char *argv[]) {
     );
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // render_imgui_draw_data();
+    render_imgui_draw_data();
 
     glUseProgram(particle_shader);
     glUniformMatrix4fv(loc_proj_particle, 1, GL_FALSE, glm::value_ptr(projection));
@@ -284,7 +281,7 @@ signed main(int argc, char *argv[]) {
     bucket = !bucket;
   }
 
-  // cleanup_imgui();
+  cleanup_imgui();
   cleanup_window(window);
 
   return 0;
